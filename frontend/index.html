@@ -410,16 +410,16 @@ function buildTable(list, compact) {
     <td>${p.urgente?'<span class="badge b-urg">⚡ URGENTE</span>':'<span style="color:#444">—</span>'}</td>
     <td><span class="badge ${p.status==='resolvida'?'b-res':'b-pend'}">${p.status==='resolvida'?'✓ Resolvida':'● Pendente'}</span></td>
     <td style="color:#666">${fmtDate(p.criado_em)}</td>
-    ${!compact?`<td>${buildAcao(p)}</td>`:''}
+  ${!compact ? `<td>${buildAcao(p)}</td>` : ''}
   </tr>`).join('')}
   </tbody></table>`;
 }
 
 function buildAcao(p) {
   if (CU.tipo==='captador'&&p.status==='pendente')
-    return `<button class="btn-success" onclick="confirmarResolver(${p.id},'${p.cliente.replace(/'/g,'\\\')}')">Resolver</button>`;
+return `<button class="btn-success" onclick="confirmarResolver(${p.id},'${p.cliente.replace(/'/g,'\\\'')}')">Resolver</button>`;
   if ((CU.tipo==='admin'||CU.tipo==='operador')&&p.status==='pendente')
-    return `<button class="btn-danger" onclick="confirmarExcluir(${p.id},'${p.cliente.replace(/'/g,'\\\')}')">Excluir</button>`;
+  return `<button class="btn-danger" onclick="confirmarExcluir(${p.id},'${p.cliente.replace(/'/g,'\\\'')}')">Excluir</button>`;
   return '<span style="color:#444;font-size:12px">—</span>';
 }
 
@@ -498,9 +498,9 @@ async function renderUsuarios(el) {
               <td style="color:var(--org);font-weight:600">${u.login}</td>
               <td><span class="badge ${u.tipo==='admin'?'b-adm':u.tipo==='operador'?'b-op':'b-cap'}">${u.tipo}</span></td>
               <td style="color:#666">${fmtDate(u.criado_em)}</td>
-              <td>${u.tipo!=='admin'
-                ?`<button class="btn-danger" onclick="confirmarDelUser(${u.id},'${u.nome.replace(/'/g,'\\\')}')">Excluir</button>`
-                :'<span style="color:#333;font-size:12px">Protegido</span>'}</td>
+            <td>${u.tipo !== 'admin' 
+  ? `<button class="btn-danger" onclick="confirmarDelUser(${u.id},'${u.nome.replace(/'/g, "\\\'")}')">Excluir</button>` 
+  : '<span style="color:#333;font-size:12px">Protegido</span>'}</td>
             </tr>`).join('')}
           </tbody>
         </table></div>
@@ -556,7 +556,6 @@ async function alterarSenha() {
   } finally {
     btn.disabled=false; btn.textContent='Salvar Nova Senha';
   }
-}
 
 // ── MODAIS ──
 function openModal(html) {
