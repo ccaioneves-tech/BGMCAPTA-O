@@ -416,11 +416,13 @@ function buildTable(list, compact) {
 }
 
 function buildAcao(p) {
-  if (CU.tipo==='captador'&&p.status==='pendente')
-return <button class="btn-success" onclick="confirmarResolver(${p.id},&#39;${p.cliente.replace(/'/g,'\&#39;')}')">Resolver</button>;
-  if ((CU.tipo==='admin'||CU.tipo==='operador')&&p.status==='pendente')
-  return <button class="btn-danger" onclick="confirmarExcluir(${p.id},&#39;${p.cliente.replace(/'/g,'\&#39;')}')">Excluir</button>;
-  return '<span style="color:#444;font-size:12px">—</span>';
+  if (CU.tipo === 'captador' && p.status === 'pendente') {
+    return `<button class="btn-success" onclick="confirmarResolver(${p.id},'${p.cliente.replace(/'/g, "\\\'")}')">Resolver</button>`;
+  }
+  if ((CU.tipo === 'admin' || CU.tipo === 'operador') && p.status === 'pendente') {
+    return `<button class="btn-danger" onclick="confirmarExcluir(${p.id},'${p.cliente.replace(/'/g, "\\\'")}')">Excluir</button>`;
+  }
+  return '<span style="color:#444;font-size:12px">-</span>';
 }
 
 // ── NOVA PENDÊNCIA ──
