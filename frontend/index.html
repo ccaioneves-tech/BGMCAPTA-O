@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>BGM Captação</title>
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html, body { width: 100%; height: 100%; overflow: hidden; }
+  :root {
+    --bg: #000; --surf: #0f0f0f; --surf2: #181818; --surf3: #222;
+    --bord: rgba(255,106,0,.18); --bord2: rgba(255,255,255,.08);
+    --org: #FF6A00; --org-dim: rgba(255,106,0,.13); --org-h: #ff7d1a;
+    --txt: #fff; --txt2: #ccc; --txt3: #888;
+    --red: #ff3b3b; --red-dim: rgba(255,59,59,.13);
+    --grn: #22c55e; --grn-dim: rgba(34,197,94,.1);
+    --sw: 230px;
+  }
+  body { background:var(--bg); color:var(--txt); font-family:'Segoe UI',system-ui,sans-serif; font-size:14px; }
+
+  /* LOGIN */
+  #login-screen { width:100vw; height:100vh; display:flex; align-items:center; justify-content:center; }
+  .lcard { background:var(--surf); border:1px solid var(--bord); border-radius:16px; padding:44px 40px; width:380px; }
+  .llogo { text-align:center; margin-bottom:32px; }
+  .lbrand { font-size:24px; font-weight:800; letter-spacing:3px; color:var(--org); }
+  .ldot { display:inline-block; width:7px; height:7px; background:var(--org); border-radius:50%; margin:0 6px; vertical-align:middle; }
+  .lsub { font-size:10px; color:var(--txt3); letter-spacing:4px; margin-top:6px; text-transform:uppercase; }
+  .lsep { width:40px; height:2px; background:var(--org); margin:16px auto 0; border-radius:2px; }
+  .lcopy { margin-top:22px; text-align:center; font-size:11px; color:#2a2a2a; letter-spacing:1px; }
+
+  /* FORMS */
+  .fg { margin-bottom:16px; }
+  .fg label { display:block; font-size:10px; color:var(--txt3); letter-spacing:1.5px; margin-bottom:6px; text-transform:uppercase; }
+  .fg input, .fg select, .fg textarea { width:100%; background:var(--surf2); border:1px solid var(--bord2); border-radius:8px; padding:10px 14px; color:var(--txt); font-size:14px; outline:none; transition:border-color .2s; font-family:inherit; }
+  .fg input:focus, .fg select:focus, .fg textarea:focus { border-color:var(--org); }
+  .fg select option { background:#181818; color:#fff; }
+  .fg textarea { resize:vertical; min-height:90px; }
+
+  /* BUTTONS */
+  .btn-primary { width:100%; background:var(--org); color:#000; border:none; border-radius:8px; padding:12px; font-size:14px; font-weight:700; cursor:pointer; letter-spacing:1px; transition:background .2s; font-family:inherit; }
+  .btn-primary:hover { background:var(--org-h); }
+  .btn-primary:disabled { opacity:.6; cursor:not-allowed; }
+  .btn-sm { background:var(--org); color:#000; border:none; border-radius:6px; padding:7px 16px; font-size:12px; font-weight:700; cursor:pointer; transition:background .2s; font-family:inherit; white-space:nowrap; }
+  .btn-sm:hover { background:var(--org-h); }
+  .btn-ghost { background:transparent; color:var(--txt3); border:1px solid var(--bord2); border-radius:6px; padding:7px 16px; font-size:12px; cursor:pointer; transition:all .2s; font-family:inherit; }
+  .btn-ghost:hover { border-color:var(--org); color:var(--org); }
+  .btn-danger { background:var(--red-dim); color:var(--red); border:1px solid rgba(255,59,59,.25); border-radius:6px; padding:5px 13px; font-size:12px; cursor:pointer; font-family:inherit; }
+  .btn-success { background:var(--grn-dim); color:var(--grn); border:1px solid rgba(34,197,94,.25); border-radius:6px; padding:5px 13px; font-size:12px; cursor:pointer; font-family:inherit; }
+  .errmsg { color:var(--red); font-size:12px; margin-top:8px; }
+  .hidden { display:none !important; }
+
+  /* APP */
+  #main-app { width:100vw; height:100vh; display:flex; overflow:hidden; }
+
+  /* SIDEBAR */
+  .sidebar { width:var(--sw); min-width:var(--sw); height:100vh; background:var(--surf); border-right:1px solid var(--bord2); display:flex; flex-direction:column; }
+  .s-logo { padding:22px 18px 16px; border-bottom:1px solid var(--bord2); }
+  .s-logo .brand { font-size:14px; font-weight:800; letter-spacing:2px; color:var(--org); }
+  .s-logo .sub { font-size:9px; color:var(--txt3); letter-spacing:3px; margin-top:3px; text-transform:uppercase; }
+  .s-user { padding:14px 16px; border-bottom:1px solid var(--bord2); display:flex; align-items:center; gap:10px; }
+  .u-avatar { width:34px; height:34px; border-radius:50%; background:var(--org-dim); border:1px solid var(--org); display:flex; align-items:center; justify-content:center; font-size:12px; font-weight:700; color:var(--org); flex-shrink:0; }
+  .u-name { font-size:13px; font-weight:600; color:var(--txt); overflow:hidden; text-overflow:ellipsis; white-space:nowrap; }
+  .u-role { font-size:10px; color:var(--org); text-transform:uppercase; letter-spacing:.5px; }
+  .s-nav { flex:1; padding:12px 8px; overflow-y:auto; }
+  .nav-sec { font-size:9px; color:var(--txt3); letter-spacing:2px; text-transform:uppercase; padding:10px 10px 4px; }
+  .ni { display:flex; align-items:center; gap:10px; padding:9px 10px; border-radius:8px; cursor:pointer; color:var(--txt3); font-size:13px; transition:all .15s; margin-bottom:2px; border:1px solid transparent; user-select:none; }
+  .ni:hover { background:var(--surf2); color:var(--txt); }
+  .ni.active { background:var(--org-dim); color:var(--org); border-color:var(--bord); }
+  .ni .ico { font-size:14px; width:20px; text-align:center; flex-shrink:0; }
+  .n-badge { margin-left:auto; background:var(--org); color:#000; font-size:10px; font-weight:700; padding:1px 7px; border-radius:10px; }
+  .s-logout { padding:12px 8px; border-top:1px solid var(--bord2); }
+  .s-logout .ni:hover { color:var(--red); background:var(--red-dim); }
+
+  /* CONTENT */
+  .main-content { flex:1; height:100vh; overflow-y:auto; padding:28px 32px; background:var(--bg); }
+  .page-header { margin-bottom:26px; }
+  .page-title { font-size:22px; font-weight:700; }
+  .page-sub { font-size:13px; color:var(--txt3); margin-top:5px; }
+
+  /* STATS */
+  .stats-grid { display:grid; grid-template-columns:repeat(4,1fr); gap:14px; margin-bottom:26px; }
+  .stat-card { background:var(--surf); border:1px solid var(--bord2); border-radius:12px; padding:18px 20px; }
+  .stat-label { font-size:10px; color:var(--txt3); letter-spacing:1px; text-transform:uppercase; margin-bottom:10px; }
+  .stat-val { font-size:32px; font-weight:700; }
+  .stat-val.org { color:var(--org); }
+  .stat-val.red { color:var(--red); }
+  .stat-val.grn { color:var(--grn); }
+  .stat-icon { float:right; font-size:22px; opacity:.4; margin-top:-2px; }
+
+  /* TABLE */
+  .table-wrap { background:var(--surf); border:1px solid var(--bord2); border-radius:12px; overflow:hidden; margin-bottom:20px; }
+  .table-head { padding:16px 20px; border-bottom:1px solid var(--bord2); display:flex; align-items:center; justify-content:space-between; gap:12px; flex-wrap:wrap; }
+  .table-title { font-size:14px; font-weight:600; }
+  .filters { display:flex; gap:8px; align-items:center; flex-wrap:wrap; }
+  .f-sel { background:var(--surf2); border:1px solid var(--bord2); border-radius:6px; padding:6px 12px; color:var(--txt); font-size:12px; cursor:pointer; outline:none; font-family:inherit; }
+  .table-scroll { overflow-x:auto; }
+  table { width:100%; border-collapse:collapse; min-width:600px; }
+  th { padding:11px 16px; text-align:left; font-size:10px; color:var(--txt3); letter-spacing:1px; text-transform:uppercase; border-bottom:1px solid var(--bord2); font-weight:500; white-space:nowrap; }
+  td { padding:13px 16px; border-bottom:1px solid rgba(255,255,255,.03); font-size:13px; color:var(--txt2); }
+  tr:last-child td { border-bottom:none; }
+  tr:hover td { background:rgba(255,255,255,.025); }
+  .row-urg td { border-left:3px solid var(--red); }
+  .td-name { color:#fff !important; font-weight:500; }
+
+  /* BADGES */
+  .badge { display:inline-flex; align-items:center; gap:3px; padding:3px 9px; border-radius:6px; font-size:11px; font-weight:700; white-space:nowrap; }
+  .b-urg  { background:var(--red-dim); color:var(--red); border:1px solid rgba(255,59,59,.3); animation:pulse 2s infinite; }
+  .b-pend { background:rgba(255,106,0,.1); color:var(--org); border:1px solid rgba(255,106,0,.25); }
+  .b-res  { background:var(--grn-dim); color:var(--grn); border:1px solid rgba(34,197,94,.25); }
+  .b-adm  { background:rgba(139,92,246,.1); color:#a78bfa; border:1px solid rgba(139,92,246,.2); }
+  .b-op   { background:rgba(59,130,246,.1); color:#60a5fa; border:1px solid rgba(59,130,246,.2); }
+  .b-cap  { background:rgba(20,184,166,.1); color:#2dd4bf; border:1px solid rgba(20,184,166,.2); }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.5} }
+  .empty-state { padding:48px; text-align:center; color:var(--txt3); font-size:15px; }
+
+  /* MODAL */
+  .modal-overlay { position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(0,0,0,.78); display:flex; align-items:center; justify-content:center; z-index:1000; }
+  .modal { background:var(--surf); border:1px solid var(--bord); border-radius:16px; padding:32px; width:460px; max-width:95vw; animation:fadeup .22s ease; }
+  @keyframes fadeup { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+  .modal-title { font-size:17px; font-weight:700; margin-bottom:8px; color:var(--org); }
+  .modal-sub { font-size:13px; color:var(--txt2); margin-bottom:22px; line-height:1.7; }
+  .modal-actions { display:flex; gap:10px; justify-content:flex-end; margin-top:22px; }
+
+  /* TOGGLE */
+  .tog-row { display:flex; align-items:center; justify-content:space-between; padding:11px 14px; background:var(--surf2); border-radius:8px; margin-top:4px; }
+  .toggle { position:relative; display:inline-block; width:42px; height:24px; }
+  .toggle input { opacity:0; width:0; height:0; }
+  .sl { position:absolute; cursor:pointer; top:0; left:0; right:0; bottom:0; background:var(--surf3); border-radius:24px; transition:.3s; }
+  .sl:before { position:absolute; content:""; height:18px; width:18px; left:3px; bottom:3px; background:#fff; border-radius:50%; transition:.3s; }
+  input:checked + .sl { background:var(--red); }
+  input:checked + .sl:before { transform:translateX(18px); }
+
+  /* TOAST */
+  #toast { position:fixed; bottom:28px; right:28px; background:#0f0f0f; border:1px solid var(--grn); border-radius:10px; padding:13px 20px; color:var(--grn); font-size:13px; font-weight:600; opacity:0; transform:translateY(10px); transition:opacity .3s,transform .3s; pointer-events:none; z-index:2000; }
+  #toast.show { opacity:1; transform:translateY(0); }
+  #toast.err  { border-color:var(--red); color:var(--red); }
+
+  .form-card { max-width:520px; background:var(--surf); border:1px solid var(--bord2); border-radius:14px; padding:28px; }
+  .loading { text-align:center; padding:40px; color:var(--txt3); font-size:13px; }
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div id="login-screen">
+  <div class="lcard">
+    <div class="llogo">
+      <div class="lbrand">BGM<span class="ldot"></span>CAPTAÇÃO</div>
+      <div class="lsub">Sistema de Pendências</div>
+      <div class="lsep"></div>
+    </div>
+    <div class="fg"><label>Usuário</label>
+      <input type="text" id="l-user" placeholder="seu.login" autocomplete="off">
+    </div>
+    <div class="fg"><label>Senha</label>
+      <input type="password" id="l-pass" placeholder="••••••••">
+    </div>
+    <div id="l-err" class="errmsg hidden"></div>
+    <button class="btn-primary" id="btn-login" style="margin-top:10px" onclick="doLogin()">ENTRAR</button>
+    <div class="lcopy">BGM CAPTAÇÃO · Sistema Interno</div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="main-app" class="hidden">
+  <div class="sidebar">
+    <div class="s-logo">
+      <div class="brand">BGM CAPTAÇÃO</div>
+      <div class="sub">Gestão Interna</div>
+    </div>
+    <div class="s-user">
+      <div class="u-avatar" id="u-av">--</div>
+      <div style="overflow:hidden">
+        <div class="u-name" id="u-name">--</div>
+        <div class="u-role" id="u-role">--</div>
+      </div>
+    </div>
+    <div class="s-nav" id="s-nav"></div>
+    <div class="s-logout">
+      <div class="ni" onclick="doLogout()"><span class="ico">⏏</span> Sair do sistema</div>
+    </div>
+  </div>
+  <div class="main-content" id="mc"></div>
+</div>
+
+<div id="modal-root"></div>
+<div id="toast"></div>
+
+<script>
+// ── CONFIG ──
+// Em produção o frontend e backend rodam na mesma origem,
+// então deixamos vazio. Em dev, aponta para localhost:3000.
+const API_BASE = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+  ? 'http://localhost:3000'
+  : '';
+
+let TOKEN = localStorage.getItem('bgm_token') || null;
+let CU    = JSON.parse(localStorage.getItem('bgm_user') || 'null');
+let pf    = { urg:'todos', st:'todos' };
+
+// ── API ──
+async function api(method, path, body) {
+  const opts = {
+    method,
+    headers: { 'Content-Type': 'application/json' }
+  };
+  if (TOKEN) opts.headers['Authorization'] = `Bearer ${TOKEN}`;
+  if (body)  opts.body = JSON.stringify(body);
+
+  const res = await fetch(API_BASE + path, opts);
+  const data = await res.json().catch(() => ({}));
+
+  if (res.status === 401) {
+    // Token expirado
+    doLogout(); return;
+  }
+  if (!res.ok) throw new Error(data.erro || 'Erro na requisição.');
+  return data;
+}
+
+function toast(msg, err=false) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = 'show' + (err ? ' err' : '');
+  clearTimeout(t._t);
+  t._t = setTimeout(() => t.className = '', 2800);
+}
+
+// ── AUTH ──
+async function doLogin() {
+  const login = document.getElementById('l-user').value.trim();
+  const senha = document.getElementById('l-pass').value;
+  const err   = document.getElementById('l-err');
+  const btn   = document.getElementById('btn-login');
+  if (!login || !senha) { err.textContent='Preencha usuário e senha.'; err.classList.remove('hidden'); return; }
+  btn.disabled = true; btn.textContent = 'Entrando...';
+  try {
+    const data = await api('POST', '/api/auth/login', { login, senha });
+    TOKEN = data.token;
+    CU    = data.usuario;
+    localStorage.setItem('bgm_token', TOKEN);
+    localStorage.setItem('bgm_user',  JSON.stringify(CU));
+    err.classList.add('hidden');
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('main-app').classList.remove('hidden');
+    buildSidebar(); navigate('dashboard');
+  } catch (e) {
+    err.textContent = e.message; err.classList.remove('hidden');
+  } finally {
+    btn.disabled = false; btn.textContent = 'ENTRAR';
+  }
+}
+
+function doLogout() {
+  TOKEN = null; CU = null;
+  localStorage.removeItem('bgm_token');
+  localStorage.removeItem('bgm_user');
+  document.getElementById('login-screen').classList.remove('hidden');
+  document.getElementById('main-app').classList.add('hidden');
+  document.getElementById('l-user').value = '';
+  document.getElementById('l-pass').value = '';
+}
+
+// Restaura sessão se já havia token salvo
+if (TOKEN && CU) {
+  document.getElementById('login-screen').classList.add('hidden');
+  document.getElementById('main-app').classList.remove('hidden');
+  buildSidebar(); navigate('dashboard');
+}
+
+// ── SIDEBAR ──
+function buildSidebar() {
+  const ini = CU.nome.split(' ').slice(0,2).map(n=>n[0]).join('');
+  document.getElementById('u-av').textContent   = ini;
+  document.getElementById('u-name').textContent = CU.nome;
+  document.getElementById('u-role').textContent = CU.tipo.toUpperCase();
+  let nav = '';
+  if (CU.tipo === 'admin') {
+    nav = `<div class="nav-sec">Painel</div>
+      <div class="ni" onclick="navigate('dashboard')" data-p="dashboard"><span class="ico">◈</span> Dashboard</div>
+      <div class="nav-sec">Gestão</div>
+      <div class="ni" onclick="navigate('pendencias')" data-p="pendencias"><span class="ico">◉</span> Pendências <span class="n-badge" id="nbg"></span></div>
+      <div class="ni" onclick="navigate('usuarios')" data-p="usuarios"><span class="ico">◎</span> Usuários</div>
+      <div class="nav-sec">Conta</div>
+      <div class="ni" onclick="navigate('minha-conta')" data-p="minha-conta"><span class="ico">🔑</span> Alterar Senha</div>`;
+  } else if (CU.tipo === 'operador') {
+    nav = `<div class="nav-sec">Painel</div>
+      <div class="ni" onclick="navigate('dashboard')" data-p="dashboard"><span class="ico">◈</span> Dashboard</div>
+      <div class="nav-sec">Operações</div>
+      <div class="ni" onclick="navigate('pendencias')" data-p="pendencias"><span class="ico">◉</span> Pendências <span class="n-badge" id="nbg"></span></div>
+      <div class="ni" onclick="navigate('nova')" data-p="nova"><span class="ico">⊕</span> Nova Pendência</div>`;
+  } else {
+    nav = `<div class="nav-sec">Painel</div>
+      <div class="ni" onclick="navigate('dashboard')" data-p="dashboard"><span class="ico">◈</span> Dashboard</div>
+      <div class="nav-sec">Minhas Pendências</div>
+      <div class="ni" onclick="navigate('pendencias')" data-p="pendencias"><span class="ico">◉</span> Pendências <span class="n-badge" id="nbg"></span></div>`;
+  }
+  document.getElementById('s-nav').innerHTML = nav;
+}
+
+function setNavActive(page) {
+  document.querySelectorAll('.ni[data-p]').forEach(el => el.classList.toggle('active', el.dataset.p === page));
+}
+
+function navigate(page) {
+  setNavActive(page);
+  const mc = document.getElementById('mc');
+  mc.innerHTML = '<div class="loading">Carregando...</div>';
+  if      (page==='dashboard')   renderDashboard(mc);
+  else if (page==='pendencias')  renderPendencias(mc);
+  else if (page==='nova')        renderNova(mc);
+  else if (page==='usuarios')    renderUsuarios(mc);
+  else if (page==='minha-conta') renderMinhaConta(mc);
+}
+
+function fmtDate(iso) {
+  if (!iso) return '—';
+  const d = new Date(iso.replace(' ','T'));
+  return d.toLocaleDateString('pt-BR');
+}
+
+// ── DASHBOARD ──
+async function renderDashboard(el) {
+  try {
+    const pends = await api('GET', '/api/pendencias');
+    const total  = pends.length;
+    const res    = pends.filter(p=>p.status==='resolvida').length;
+    const pend   = pends.filter(p=>p.status==='pendente').length;
+    const urg    = pends.filter(p=>p.urgente&&p.status==='pendente').length;
+    const recent = pends.slice(0, 6);
+    updateBadge(pend);
+    el.innerHTML = `
+      <div class="page-header">
+        <div class="page-title">Dashboard</div>
+        <div class="page-sub">Visão geral · ${new Date().toLocaleDateString('pt-BR',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</div>
+      </div>
+      <div class="stats-grid">
+        <div class="stat-card"><span class="stat-icon">◉</span><div class="stat-label">Total</div><div class="stat-val">${total}</div></div>
+        <div class="stat-card"><span class="stat-icon">○</span><div class="stat-label">Em Aberto</div><div class="stat-val org">${pend}</div></div>
+        <div class="stat-card"><span class="stat-icon">✓</span><div class="stat-label">Resolvidas</div><div class="stat-val grn">${res}</div></div>
+        <div class="stat-card"><span class="stat-icon">⚡</span><div class="stat-label">Urgentes em Aberto</div><div class="stat-val red">${urg}</div></div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-head">
+          <div class="table-title">Pendências Recentes</div>
+          ${CU.tipo!=='captador'?`<button class="btn-sm" onclick="navigate('nova')">+ Nova Pendência</button>`:''}
+        </div>
+        <div class="table-scroll">${buildTable(recent,true)}</div>
+      </div>`;
+  } catch(e) { el.innerHTML = `<div class="empty-state">Erro ao carregar dados: ${e.message}</div>`; }
+}
+
+function updateBadge(n) {
+  const b = document.getElementById('nbg'); if (!b) return;
+  b.textContent = n || '';
+  b.style.display = n > 0 ? 'inline' : 'none';
+}
+
+// ── PENDÊNCIAS ──
+async function renderPendencias(el) {
+  try {
+    let url = '/api/pendencias?';
+    if (pf.urg==='sim') url+='urgente=1&';
+    if (pf.urg==='nao') url+='urgente=0&';
+    if (pf.st!=='todos') url+=`status=${pf.st}&`;
+
+    const list = await api('GET', url);
+    updateBadge(list.filter(p=>p.status==='pendente').length);
+    el.innerHTML = `
+      <div class="page-header">
+        <div class="page-title">${CU.tipo==='captador'?'Minhas Pendências':'Pendências'}</div>
+        <div class="page-sub">${list.length} registro${list.length!==1?'s':''} encontrado${list.length!==1?'s':''}</div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-head">
+          <div class="table-title">Lista Completa</div>
+          <div class="filters">
+            <select class="f-sel" onchange="setFilter('urg',this.value)">
+              <option value="todos">Urgência: Todas</option>
+              <option value="sim" ${pf.urg==='sim'?'selected':''}>Somente Urgentes</option>
+              <option value="nao" ${pf.urg==='nao'?'selected':''}>Não Urgentes</option>
+            </select>
+            <select class="f-sel" onchange="setFilter('st',this.value)">
+              <option value="todos">Status: Todos</option>
+              <option value="pendente"  ${pf.st==='pendente'?'selected':''}>Pendente</option>
+              <option value="resolvida" ${pf.st==='resolvida'?'selected':''}>Resolvida</option>
+            </select>
+            ${CU.tipo!=='captador'?`<button class="btn-sm" onclick="navigate('nova')">+ Nova Pendência</button>`:''}
+          </div>
+        </div>
+        <div class="table-scroll">${buildTable(list,false)}</div>
+      </div>`;
+  } catch(e) { el.innerHTML = `<div class="empty-state">Erro ao carregar: ${e.message}</div>`; }
+}
+
+function setFilter(k,v) { pf[k]=v; navigate('pendencias'); }
+
+function buildTable(list, compact) {
+  if (!list.length) return `<div class="empty-state">Nenhuma pendência encontrada.</div>`;
+  const showCap = CU.tipo!=='captador';
+  const showOp  = CU.tipo==='admin';
+  return `<table><thead><tr>
+    <th>Cliente</th><th>Problema</th>
+    ${showCap?'<th>Captador</th>':''}${showOp?'<th>Operador</th>':''}
+    <th>Urgente</th><th>Status</th><th>Data</th>
+    ${!compact?'<th>Ação</th>':''}
+  </tr></thead><tbody>
+  ${list.map(p=>`<tr class="${p.urgente&&p.status==='pendente'?'row-urg':''}">
+    <td class="td-name">${p.cliente}</td>
+    <td>${p.problema}</td>
+    ${showCap?`<td>${p.captador_nome||'—'}</td>`:''}
+    ${showOp?`<td>${p.operador_nome||'—'}</td>`:''}
+    <td>${p.urgente?'<span class="badge b-urg">⚡ URGENTE</span>':'<span style="color:#444">—</span>'}</td>
+    <td><span class="badge ${p.status==='resolvida'?'b-res':'b-pend'}">${p.status==='resolvida'?'✓ Resolvida':'● Pendente'}</span></td>
+    <td style="color:#666">${fmtDate(p.criado_em)}</td>
+    ${!compact?`<td>${buildAcao(p)}</td>`:''}
+  </tr>`).join('')}
+  </tbody></table>`;
+}
+
+function buildAcao(p) {
+  if (CU.tipo==='captador'&&p.status==='pendente')
+    return `<button class="btn-success" onclick="confirmarResolver(${p.id},'${p.cliente.replace(/'/g,'\\\')}')">Resolver</button>`;
+  if ((CU.tipo==='admin'||CU.tipo==='operador')&&p.status==='pendente')
+    return `<button class="btn-danger" onclick="confirmarExcluir(${p.id},'${p.cliente.replace(/'/g,'\\\')}')">Excluir</button>`;
+  return '<span style="color:#444;font-size:12px">—</span>';
+}
+
+// ── NOVA PENDÊNCIA ──
+async function renderNova(el) {
+  try {
+    const caps = await api('GET', '/api/usuarios');
+    const captadores = CU.tipo==='admin' ? caps.filter(u=>u.tipo==='captador') : caps;
+    el.innerHTML = `
+      <div class="page-header">
+        <div class="page-title">Nova Pendência</div>
+        <div class="page-sub">Preencha os dados para criar uma nova pendência</div>
+      </div>
+      <div class="form-card">
+        <div class="fg"><label>Captador Responsável</label>
+          <select id="n-cap">${captadores.map(c=>`<option value="${c.id}">${c.nome}</option>`).join('')}</select>
+        </div>
+        <div class="fg"><label>Nome do Cliente</label>
+          <input type="text" id="n-cli" placeholder="Ex: Empresa XYZ Ltda">
+        </div>
+        <div class="fg"><label>Descrição do Problema</label>
+          <textarea id="n-prob" placeholder="Descreva detalhadamente o problema..."></textarea>
+        </div>
+        <div class="fg"><label>Nível de Urgência</label>
+          <div class="tog-row">
+            <span style="font-size:13px;color:var(--txt)">Marcar como <strong style="color:var(--red)">URGENTE</strong></span>
+            <label class="toggle"><input type="checkbox" id="n-urg"><span class="sl"></span></label>
+          </div>
+        </div>
+        <div id="n-err" class="errmsg hidden"></div>
+        <div style="display:flex;gap:12px;margin-top:8px">
+          <button class="btn-primary" id="n-btn" onclick="criarPend()">Criar Pendência</button>
+          <button class="btn-ghost" onclick="navigate('pendencias')">Cancelar</button>
+        </div>
+      </div>`;
+  } catch(e) { el.innerHTML = `<div class="empty-state">Erro: ${e.message}</div>`; }
+}
+
+async function criarPend() {
+  const cap  = parseInt(document.getElementById('n-cap').value);
+  const cli  = document.getElementById('n-cli').value.trim();
+  const prob = document.getElementById('n-prob').value.trim();
+  const urg  = document.getElementById('n-urg').checked;
+  const err  = document.getElementById('n-err');
+  const btn  = document.getElementById('n-btn');
+  if (!cli||!prob) { err.textContent='Preencha todos os campos.'; err.classList.remove('hidden'); return; }
+  btn.disabled=true; btn.textContent='Criando...';
+  try {
+    await api('POST', '/api/pendencias', { cliente:cli, problema:prob, urgente:urg, captador_id:cap });
+    navigate('pendencias'); toast('✓ Pendência criada com sucesso!');
+  } catch(e) {
+    err.textContent=e.message; err.classList.remove('hidden');
+    btn.disabled=false; btn.textContent='Criar Pendência';
+  }
+}
+
+// ── USUÁRIOS ──
+async function renderUsuarios(el) {
+  try {
+    const users = await api('GET', '/api/usuarios');
+    el.innerHTML = `
+      <div class="page-header">
+        <div class="page-title">Usuários</div>
+        <div class="page-sub">Gerenciar operadores e captadores do sistema</div>
+      </div>
+      <div class="table-wrap">
+        <div class="table-head">
+          <div class="table-title">Todos os Usuários (${users.length})</div>
+          <button class="btn-sm" onclick="modalNovoUser()">+ Novo Usuário</button>
+        </div>
+        <div class="table-scroll"><table>
+          <thead><tr><th>Nome</th><th>Login</th><th>Tipo</th><th>Cadastro</th><th>Ação</th></tr></thead>
+          <tbody>
+            ${users.map(u=>`<tr>
+              <td class="td-name">${u.nome}</td>
+              <td style="color:var(--org);font-weight:600">${u.login}</td>
+              <td><span class="badge ${u.tipo==='admin'?'b-adm':u.tipo==='operador'?'b-op':'b-cap'}">${u.tipo}</span></td>
+              <td style="color:#666">${fmtDate(u.criado_em)}</td>
+              <td>${u.tipo!=='admin'
+                ?`<button class="btn-danger" onclick="confirmarDelUser(${u.id},'${u.nome.replace(/'/g,'\\\')}')">Excluir</button>`
+                :'<span style="color:#333;font-size:12px">Protegido</span>'}</td>
+            </tr>`).join('')}
+          </tbody>
+        </table></div>
+      </div>`;
+  } catch(e) { el.innerHTML = `<div class="empty-state">Erro: ${e.message}</div>`; }
+}
+
+// ── MINHA CONTA ──
+function renderMinhaConta(el) {
+  el.innerHTML = `
+    <div class="page-header">
+      <div class="page-title">Alterar Senha</div>
+      <div class="page-sub">Atualize a senha de acesso da sua conta</div>
+    </div>
+    <div class="form-card">
+      <div style="display:flex;align-items:center;gap:14px;margin-bottom:24px;padding-bottom:20px;border-bottom:1px solid var(--bord2)">
+        <div style="width:48px;height:48px;border-radius:50%;background:var(--org-dim);border:1px solid var(--org);display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:700;color:var(--org);flex-shrink:0">
+          ${CU.nome.split(' ').slice(0,2).map(n=>n[0]).join('')}
+        </div>
+        <div>
+          <div style="font-size:15px;font-weight:600;color:#fff">${CU.nome}</div>
+          <div style="font-size:12px;color:var(--org);margin-top:3px">${CU.tipo.toUpperCase()} · ${CU.login}</div>
+        </div>
+      </div>
+      <div class="fg"><label>Senha Atual</label><input type="password" id="cp-atual" placeholder="••••••••" autocomplete="current-password"></div>
+      <div class="fg"><label>Nova Senha</label><input type="password" id="cp-nova" placeholder="Mínimo 6 caracteres" autocomplete="new-password"></div>
+      <div class="fg"><label>Confirmar Nova Senha</label><input type="password" id="cp-conf" placeholder="Repita a nova senha" autocomplete="new-password"></div>
+      <div id="cp-err" class="errmsg hidden"></div>
+      <div style="display:flex;gap:12px;margin-top:8px">
+        <button class="btn-primary" id="cp-btn" onclick="alterarSenha()">Salvar Nova Senha</button>
+        <button class="btn-ghost" onclick="navigate('dashboard')">Cancelar</button>
+      </div>
+    </div>`;
+}
+
+async function alterarSenha() {
+  const atual=document.getElementById('cp-atual').value,
+        nova=document.getElementById('cp-nova').value,
+        conf=document.getElementById('cp-conf').value,
+        err=document.getElementById('cp-err'),
+        btn=document.getElementById('cp-btn');
+  if (!atual||!nova||!conf) { err.textContent='Preencha todos os campos.'; err.classList.remove('hidden'); return; }
+  if (nova.length<6) { err.textContent='A nova senha deve ter no mínimo 6 caracteres.'; err.classList.remove('hidden'); return; }
+  if (nova!==conf)   { err.textContent='As senhas não coincidem.'; err.classList.remove('hidden'); return; }
+  btn.disabled=true; btn.textContent='Salvando...';
+  try {
+    await api('POST', '/api/auth/alterar-senha', { senhaAtual:atual, novaSenha:nova });
+    err.classList.add('hidden');
+    toast('✓ Senha alterada com sucesso!');
+    setTimeout(()=>navigate('dashboard'),1200);
+  } catch(e) {
+    err.textContent=e.message; err.classList.remove('hidden');
+  } finally {
+    btn.disabled=false; btn.textContent='Salvar Nova Senha';
+  }
+}
+
+// ── MODAIS ──
+function openModal(html) {
+  document.getElementById('modal-root').innerHTML=`<div class="modal-overlay" onclick="closeModalBg(event)">${html}</div>`;
+}
+function closeModal() { document.getElementById('modal-root').innerHTML=''; }
+function closeModalBg(e) { if(e.target.classList.contains('modal-overlay')) closeModal(); }
+
+function confirmarResolver(id, cliente) {
+  openModal(`<div class="modal">
+    <div class="modal-title">Confirmar Resolução</div>
+    <div class="modal-sub">Tem certeza que deseja marcar a pendência de<br>
+      <strong style="color:#fff;font-size:14px">${cliente}</strong> como resolvida?
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn-primary" style="width:auto;padding:10px 24px" onclick="resolverOk(${id})">Confirmar</button>
+    </div>
+  </div>`);
+}
+async function resolverOk(id) {
+  closeModal();
+  try {
+    await api('PATCH', `/api/pendencias/${id}/resolver`);
+    navigate('pendencias'); toast('✓ Pendência marcada como resolvida!');
+  } catch(e) { toast(e.message, true); }
+}
+
+function confirmarExcluir(id, cliente) {
+  openModal(`<div class="modal">
+    <div class="modal-title" style="color:var(--red)">Excluir Pendência</div>
+    <div class="modal-sub">Tem certeza que deseja excluir a pendência de<br>
+      <strong style="color:#fff">${cliente}</strong>?<br>
+      <span style="color:#666;font-size:12px">Esta ação não pode ser desfeita.</span>
+    </div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn-danger" style="padding:9px 22px;font-size:13px" onclick="excluirOk(${id})">Excluir</button>
+    </div>
+  </div>`);
+}
+async function excluirOk(id) {
+  closeModal();
+  try {
+    await api('DELETE', `/api/pendencias/${id}`);
+    navigate('pendencias'); toast('Pendência excluída.', true);
+  } catch(e) { toast(e.message, true); }
+}
+
+function confirmarDelUser(id, nome) {
+  openModal(`<div class="modal">
+    <div class="modal-title" style="color:var(--red)">Excluir Usuário</div>
+    <div class="modal-sub">Tem certeza que deseja excluir o usuário <strong style="color:#fff">${nome}</strong>?</div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn-danger" style="padding:9px 22px;font-size:13px" onclick="delUserOk(${id})">Excluir</button>
+    </div>
+  </div>`);
+}
+async function delUserOk(id) {
+  closeModal();
+  try {
+    await api('DELETE', `/api/usuarios/${id}`);
+    navigate('usuarios'); toast('Usuário removido.');
+  } catch(e) { toast(e.message, true); }
+}
+
+function modalNovoUser() {
+  openModal(`<div class="modal">
+    <div class="modal-title">Novo Usuário</div>
+    <div class="fg"><label>Nome Completo</label><input type="text" id="nu-n" placeholder="Nome completo"></div>
+    <div class="fg"><label>Login</label><input type="text" id="nu-l" placeholder="usuario.login" autocomplete="off"></div>
+    <div class="fg"><label>Senha</label><input type="password" id="nu-s" placeholder="Mínimo 6 caracteres" autocomplete="off"></div>
+    <div class="fg"><label>Tipo de Usuário</label>
+      <select id="nu-t"><option value="operador">Operador</option><option value="captador">Captador</option></select>
+    </div>
+    <div id="nu-err" class="errmsg hidden"></div>
+    <div class="modal-actions">
+      <button class="btn-ghost" onclick="closeModal()">Cancelar</button>
+      <button class="btn-primary" style="width:auto;padding:10px 24px" id="nu-btn" onclick="salvarUser()">Salvar</button>
+    </div>
+  </div>`);
+}
+async function salvarUser() {
+  const n=document.getElementById('nu-n').value.trim(),
+        l=document.getElementById('nu-l').value.trim(),
+        s=document.getElementById('nu-s').value,
+        t=document.getElementById('nu-t').value,
+        e=document.getElementById('nu-err'),
+        btn=document.getElementById('nu-btn');
+  if (!n||!l||!s) { e.textContent='Preencha todos os campos.'; e.classList.remove('hidden'); return; }
+  if (s.length<6) { e.textContent='Senha mínimo 6 caracteres.'; e.classList.remove('hidden'); return; }
+  btn.disabled=true; btn.textContent='Salvando...';
+  try {
+    await api('POST', '/api/usuarios', { nome:n, login:l, senha:s, tipo:t });
+    closeModal(); navigate('usuarios'); toast('✓ Usuário criado com sucesso!');
+  } catch(e2) {
+    e.textContent=e2.message; e.classList.remove('hidden');
+    btn.disabled=false; btn.textContent='Salvar';
+  }
+}
+
+// ── KEYBOARD ──
+document.getElementById('l-pass').addEventListener('keydown', e => { if(e.key==='Enter') doLogin(); });
+document.getElementById('l-user').addEventListener('keydown', e => { if(e.key==='Enter') document.getElementById('l-pass').focus(); });
+</script>
+</body>
+</html>
